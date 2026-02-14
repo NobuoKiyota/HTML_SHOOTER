@@ -1,0 +1,12 @@
+{
+    "BASE_ACCEL": 0.03,
+    "BASE_MAX_SPEED": 6.0,
+    "MIN_SPEED": 0.5,
+    "BRAKE_FORCE": 0.15,
+    "FRICTION": 0.99,
+    "CARGO_HP_BASE": 100.0,
+    "MISSION_SCALE": 85.0,
+    "MISSION_DIVISOR": 2000.0,
+    "MISSILE_DAMAGE": 40,
+    "MISSILE_COOLDOWN": 60
+}

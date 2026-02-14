@@ -1,0 +1,31 @@
+{
+    "TIERS": [
+        {
+            "id": "small",
+            "name": "小惑星破片",
+            "color": "#888",
+            "hp": 10,
+            "speed": 1.5,
+            "homing": 0.0,
+            "reward": 3
+        },
+        {
+            "id": "medium",
+            "name": "宇宙ゴミ",
+            "color": "#f80",
+            "hp": 30,
+            "speed": 1.0,
+            "homing": 0.3,
+            "reward": 8
+        },
+        {
+            "id": "hostile",
+            "name": "軍事デブリ",
+            "color": "#f33",
+            "hp": 100,
+            "speed": 0.8,
+            "homing": 1.2,
+            "reward": 25
+        }
+    ]
+}

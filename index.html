@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Top-Down Shooter Framework - Alpha</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <div id="global-header">
+        <div class="header-section">
+            <button id="global-back-btn" class="back-btn" onclick="engine.goBack()">←</button>
+            <span class="header-label">CAREER</span>
+            <span class="header-val"><span id="career-clears">0</span> Clears</span>
+            <span class="header-val"><span id="career-destroys">0</span> Destroys</span>
+            <span class="header-val"><span id="career-rate">0</span>% Achieve</span>
+        </div>
+        <div class="header-section main-title">INTERSTELLAR CARRIER</div>
+        <div class="header-section">
+            <button id="sound-toggle-btn" class="header-btn" onclick="engine.toggleSound()">🔊</button>
+            <span class="header-label">CREDITS:</span>
+            <span id="global-money" class="money-val">$0</span>
+        </div>
+    </div>
+
+    <div id="main-layout-container">
+        <!-- 左パネル：ミッション・距離・取得物 -->
+        <div id="gui-left-panel" class="side-panel">
+            <div class="panel-header">CONTROL</div>
+            <div style="padding: 10px; text-align: center;">
+                <button id="retire-btn" onclick="engine.retireMission()">RETIRE</button>
+            </div>
+
+            <div class="panel-header">MISSION INFO</div>
+            <div class="panel-content">
+                <div id="mission-title" style="color: #fa0; font-weight: bold; margin-bottom: 5px;">-</div>
+                <div id="mission-stars" style="color: #ff0; margin-bottom: 5px;"></div>
+                <div>Weight: <span id="weight-val" class="val">0</span>.0</div>
+                <div style="margin-top: 10px; border-top: 1px solid #444; padding-top: 5px;">
+                    LOOT:<br>
+                    <div id="loot-list-ingame" style="font-size: 0.8em; color: #0f0;"></div>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-container">
+            <canvas id="gameCanvas"></canvas>
+
+            <!-- タイトル画面 -->
+            <div id="title-screen" class="screen hide">
+                <h1>INTERSTELLAR CARRIER</h1>
+                <p>~ 配送業者はつらいよ ~</p>
+                <button onclick="engine.changeState(GAME_STATE.MENU)">START GAME</button>
+            </div>
+
+            <!-- メインメニュー -->
+            <div id="main-menu" class="screen hide">
+                <h2>船内ターミナル</h2>
+                <div class="stats-info">
+                    Units Waiting for Delivery...
+                </div>
+                <button onclick="engine.changeState(GAME_STATE.MISSION_SELECT)">依頼を確認する</button>
+                <button onclick="engine.changeState(GAME_STATE.GRID_MODIFY)">船体を改造する</button>
+                <button onclick="engine.changeState(GAME_STATE.UPGRADE)">能力値を強化する</button>
+                <button id="reset-save-btn">データをリセット</button>
+            </div>
+
+            <div id="upgrade-screen" class="screen hide">
+                <h2>船体カスタマイズ</h2>
+                <div id="upgrade-list"></div>
+            </div>
+
+            <div id="mission-select-screen" class="screen hide">
+                <h2>本日の依頼</h2>
+                <div id="mission-list"></div>
+            </div>
+
+            <div id="grid-screen" class="screen hide">
+                <h2>船体構成変更</h2>
+                <div id="grid-ui-layout">
+                    <div id="grid-container-wrapper">
+                        <div id="ship-grid" class="ship-grid"></div>
+                        <div class="grid-controls">
+                            <div id="sell-zone" class="sell-zone">Drag here to SELL</div>
+                            <button onclick="engine.resetGrid()">全リセット (50%返金)</button>
+                        </div>
+                    </div>
+                    <div id="part-inventory-panel">
+                        <div class="panel-header">倉庫 (WAREHOUSE)</div>
+                        <div id="warehouse-list" class="warehouse-list"></div>
+                        <div class="panel-header">パーツショップ</div>
+                        <div id="part-list"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- インゲームGUI (オーバーレイ) -->
+            <div id="ingame-gui" class="gui-overlay hide">
+                <div class="gui-top-left">
+                    Ship HP: <div class="hp-bar-bg">
+                        <div id="hp-bar-fill"></div>
+                    </div>
+                    Cargo HP: <div class="hp-bar-bg cargo">
+                        <div id="cargo-bar-fill"></div>
+                    </div>
+                    <div id="hp-text">100 / 100</div>
+                </div>
+
+                <div class="gui-top-right">
+                    Weather: <span id="weather-display">-</span>
+                </div>
+
+                <!-- キャンバス内 右下情報 -->
+                <div id="gui-canvas-info" class="canvas-bottom-right">
+                    <div>DIST: <span id="dist-val">0</span>m</div>
+                    <div>SPD: <span id="speed-val">0</span> km/h</div>
+                    <div>TIME: <span id="time-val">0.0</span>s</div>
+                </div>
+
+                <div id="item-notification"></div>
+            </div>
+
+            <!-- ... result and failure screens ... -->
+            <!-- (保持) -->
+            <div id="result-screen" class="screen hide">
+                <h2 id="result-title">MISSION COMPLETE</h2>
+                <div class="result-box">
+                    <p>成功報酬: $<span id="result-reward">0</span></p>
+                    <div id="time-bonus-display" style="font-size: 0.9em; color: #0f0;"></div>
+                    <p>取得アイテム:</p>
+                    <ul id="result-items"></ul>
+                </div>
+                <button onclick="engine.finishResult()">拠点へ戻る</button>
+            </div>
+
+            <div id="failure-screen" class="screen hide">
+                <h2 style="color: #ff416c;">MISSION FAILED</h2>
+                <div class="result-box">
+                    <p id="failure-reason">荷物が大破しました</p>
+                    <p>ペナルティ: $<span id="failure-penalty">0</span></p>
+                </div>
+                <button onclick="engine.changeState(GAME_STATE.MENU)">戻る</button>
+            </div>
+        </div>
+
+        <!-- 右パネル：統計・機体ステータス -->
+        <div id="gui-right-panel" class="side-panel">
+            <div class="panel-header">SHIP STATS</div>
+            <div class="panel-content">
+                <div class="stat-row">Max Speed: <span id="max-speed-val" class="val">0</span></div>
+                <div class="stat-row">Accel: <span id="accel-val" class="val">0</span></div>
+                <div class="stat-row">Weapon: <span id="weapon-val" class="val">0</span></div>
+                <div class="stat-row">Brake: <span id="brake-val" class="val">0</span></div>
+            </div>
+        </div>
+    </div>
+    </div>
+
+    <!-- スクリプト読み込み -->
+    <script src="js/settings_data.js"></script>
+    <script src="js/settings.js"></script>
+    <script src="js/saveManager.js"></script>
+    <script src="js/missionManager.js"></script>
+    <script src="js/gridManager.js"></script>
+    <script src="js/upgradeManager.js"></script>
+    <script src="js/soundManager.js"></script>
+    <script src="js/engine.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,35 @@
+' ==========================================
+'  HTML5 SHOOTER - Excel Sync Macro
+' ==========================================
+' 手順:
+' 1. このエクセルを「マクロ有効ブック (.xlsm)」として保存してください。
+' 2. Alt + F11 でVBAエディタを開き、挿入 > 標準モジュール を選択。
+' 3. 以下のコードを貼り付けて保存してください。
+
+Sub SyncSettings()
+    Dim shell As Object
+    Set shell = CreateObject("WScript.Shell")
+    Dim projectDir As String
+    Dim cmd As String
+    
+    ' エクセルファイルがある場所を作業ディレクトリにする
+    projectDir = ThisWorkbook.Path
+    shell.CurrentDirectory = projectDir
+    
+    ' ターミナルで同期スクリプトを実行
+    ' スクリプトの相対パスが tools/sync_settings.py であることを確認してください
+    cmd = "cmd /c python tools/sync_settings.py"
+    
+    On Error Resume Next
+    ' 1: 実行ウィンドウを表示, True: 実行終了まで待機
+    shell.Run cmd, 1, True
+    
+    If Err.Number <> 0 Then
+        MsgBox "エラー: Python または同期スクリプトが見つかりません。" & vbCrLf & _
+               "Pythonがパスに通っているか、現在のディレクトリ構成を確認してください。", vbCritical
+    Else
+        MsgBox "ゲームバランスの同期が完了しました！" & vbCrLf & _
+               "ブラウザをリロードして確認してください。", vbInformation
+    End If
+    On Error GoTo 0
+End Sub

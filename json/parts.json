@@ -1,0 +1,58 @@
+{
+    "PrimaryWeapon": {
+        "name": "初期武装",
+        "price": 1200,
+        "desc": "基本攻撃。LvUPで威力強化",
+        "w": 2,
+        "h": 1,
+        "color": "#00a2ff",
+        "weight": 12
+    },
+    "Missile": {
+        "name": "ミサイル",
+        "price": 2500,
+        "desc": "自動追尾弾。LvUPで威力強化",
+        "w": 1,
+        "h": 2,
+        "color": "#ff416c",
+        "weight": 18
+    },
+    "FireRateReducer": {
+        "name": "連射安定器",
+        "price": 1800,
+        "desc": "全武器の発射間隔を短縮",
+        "w": 1,
+        "h": 2,
+        "color": "#fa0",
+        "weight": 8
+    },
+    "ItemCollector": {
+        "name": "回収アーム",
+        "price": 1400,
+        "desc": "アイテム回収範囲拡大",
+        "w": 2,
+        "h": 1,
+        "color": "#0f0",
+        "weight": 10
+    },
+    "AccelBooster": {
+        "name": "加速拡張",
+        "price": 800,
+        "desc": "加速を僅かに向上",
+        "w": 1,
+        "h": 1,
+        "color": "#fff",
+        "boost": 0.005,
+        "weight": 5
+    },
+    "BrakeBooster": {
+        "name": "制動拡張",
+        "price": 800,
+        "desc": "ブレーキを僅かに向上",
+        "w": 1,
+        "h": 1,
+        "color": "#aaa",
+        "boost": 0.05,
+        "weight": 5
+    }
+}
