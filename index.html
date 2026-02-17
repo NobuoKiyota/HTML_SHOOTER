@@ -52,7 +52,9 @@
             <div id="title-screen" class="screen hide">
                 <h1>INTERSTELLAR CARRIER</h1>
                 <p>~ 配送業者はつらいよ ~</p>
-                <button onclick="engine.changeState(GAME_STATE.MENU)">START GAME</button>
+                <button
+                    onclick="SoundManager.play('CLICK'); console.log('[Title] Start Game'); engine.changeState(GAME_STATE.MENU)">START
+                    GAME</button>
             </div>
 
             <!-- メインメニュー -->
@@ -61,9 +63,12 @@
                 <div class="stats-info">
                     Units Waiting for Delivery...
                 </div>
-                <button onclick="engine.changeState(GAME_STATE.MISSION_SELECT)">依頼を確認する</button>
-                <button onclick="engine.changeState(GAME_STATE.GRID_MODIFY)">船体を改造する</button>
-                <button onclick="engine.changeState(GAME_STATE.UPGRADE)">能力値を強化する</button>
+                <button
+                    onclick="SoundManager.play('CLICK'); console.log('[Menu] Mission Select'); engine.changeState(GAME_STATE.MISSION_SELECT)">依頼を確認する</button>
+                <button
+                    onclick="SoundManager.play('CLICK'); console.log('[Menu] Grid Modify'); engine.changeState(GAME_STATE.GRID_MODIFY)">船体を改造する</button>
+                <button
+                    onclick="SoundManager.play('CLICK'); console.log('[Menu] Upgrade'); engine.changeState(GAME_STATE.UPGRADE)">能力値を強化する</button>
                 <button id="reset-save-btn">データをリセット</button>
             </div>
 
@@ -84,7 +89,9 @@
                         <div id="ship-grid" class="ship-grid"></div>
                         <div class="grid-controls">
                             <div id="sell-zone" class="sell-zone">Drag here to SELL</div>
-                            <button onclick="engine.resetGrid()">全リセット (50%返金)</button>
+                            <button
+                                onclick="SoundManager.play('CLICK'); console.log('[Grid] Reset Grid'); engine.resetGrid()">全リセット
+                                (50%返金)</button>
                         </div>
                     </div>
                     <div id="part-inventory-panel">
@@ -96,6 +103,7 @@
                 </div>
             </div>
 
+            <!-- ... result and failure screens ... -->
             <!-- インゲームGUI (オーバーレイ) -->
             <div id="ingame-gui" class="gui-overlay hide">
                 <div class="gui-top-left">
@@ -122,8 +130,6 @@
                 <div id="item-notification"></div>
             </div>
 
-            <!-- ... result and failure screens ... -->
-            <!-- (保持) -->
             <div id="result-screen" class="screen hide">
                 <h2 id="result-title">MISSION COMPLETE</h2>
                 <div class="result-box">
@@ -132,7 +138,8 @@
                     <p>取得アイテム:</p>
                     <ul id="result-items"></ul>
                 </div>
-                <button onclick="engine.finishResult()">拠点へ戻る</button>
+                <button
+                    onclick="SoundManager.play('CLICK'); console.log('[Result] Finish'); engine.finishResult()">拠点へ戻る</button>
             </div>
 
             <div id="failure-screen" class="screen hide">
@@ -141,7 +148,8 @@
                     <p id="failure-reason">荷物が大破しました</p>
                     <p>ペナルティ: $<span id="failure-penalty">0</span></p>
                 </div>
-                <button onclick="engine.changeState(GAME_STATE.MENU)">戻る</button>
+                <button
+                    onclick="SoundManager.play('CLICK'); console.log('[Failure] Return'); engine.changeState(GAME_STATE.MENU)">戻る</button>
             </div>
         </div>
 
@@ -158,14 +166,35 @@
     </div>
     </div>
 
+    <!-- カスタム確認ダイアログ -->
+    <div id="confirm-modal" class="modal-overlay hide">
+        <div class="modal-content">
+            <h3 id="modal-title">確認</h3>
+            <p id="modal-message">よろしいですか？</p>
+            <div class="modal-actions">
+                <button id="modal-yes-btn">はい</button>
+                <button id="modal-no-btn">いいえ</button>
+            </div>
+            <div style="margin-top: 10px;">
+                <label><input type="checkbox" id="modal-dont-show"> 今後表示しない (セッション中)</label>
+            </div>
+        </div>
+    </div>
+
     <!-- スクリプト読み込み -->
     <script src="js/settings_data.js"></script>
     <script src="js/settings.js"></script>
+    <script src="js/upgrade_config.js"></script>
     <script src="js/saveManager.js"></script>
     <script src="js/missionManager.js"></script>
     <script src="js/gridManager.js"></script>
     <script src="js/upgradeManager.js"></script>
     <script src="js/soundManager.js"></script>
+    <script src="js/ui/ShipEditor.js"></script>
+    <script src="js/ui/MissionSelector.js"></script>
+    <script src="js/ui/MainMenu.js"></script>
+    <script src="js/Enemy.js"></script>
+    <script src="js/Item.js"></script>
     <script src="js/engine.js"></script>
 </body>
 

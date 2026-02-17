@@ -4,46 +4,68 @@
  */
 const MissionManager = {
     // 3つのランダムな依頼を生成
-    generateMissions: () => {
-        const missionTypes = [
-            { id: 'short', name: '近距離配送', distRange: [200, 300], rewardMod: 0.5, penaltyMod: 0.5 },
-            { id: 'medium', name: '通常輸送', distRange: [400, 600], rewardMod: 0.8, penaltyMod: 1.0 },
-            { id: 'long', name: '遠距離密輸', distRange: [800, 1000], rewardMod: 1.5, penaltyMod: 2.0 }
-        ];
+    // Generate 3 missions based on player stats
+    generateMissions: (playerData) => {
+        const missions = [];
+        // Calculate Total Stats (Sum of all upgrade levels)
+        let totalStats = 0;
+        if (playerData && playerData.upgradeLevels) {
+            totalStats = Object.values(playerData.upgradeLevels).reduce((a, b) => a + b, 0);
+        }
 
-        const weathers = Object.keys(GAME_SETTINGS.WEATHER);
+        // Determine Difficulty Probabilities
+        const scaling = GAME_BALANCE_DATA.MISSION_DATA.DIFFICULTY_SCALING;
+        let probs = scaling[0].probs;
+        for (let i = 0; i < scaling.length; i++) {
+            if (totalStats >= scaling[i].minStat) {
+                probs = scaling[i].probs;
+            }
+        }
 
-        return [0, 1, 2].map(i => {
-            const type = missionTypes[Math.floor(Math.random() * missionTypes.length)];
-            const weatherKey = weathers[Math.floor(Math.random() * weathers.length)];
-            const weather = GAME_SETTINGS.WEATHER[weatherKey];
-
-            const distance = Math.floor(Math.random() * (type.distRange[1] - type.distRange[0]) + type.distRange[0]);
-            const weight = Math.floor(Math.random() * 5) + 1;
-            const reward = Math.floor(distance * type.rewardMod * weather.multiply);
-            const penalty = Math.floor(reward * type.penaltyMod);
-
-            // 目標時間を設定 (距離から算出)
-            // 重量による速度低下を考慮して、平均秒速12m前後を目標にする
-            const targetTime = Math.floor(distance / (10 + Math.random() * 5)) + 15;
-
-            // 難易度星 (1-5)
+        for (let i = 0; i < 3; i++) {
+            // Select Stars based on probability
+            const rand = Math.floor(Math.random() * 100);
             let stars = 1;
-            if (type.id === 'medium') stars = 2 + Math.floor(Math.random() * 2);
-            if (type.id === 'long') stars = 4 + Math.floor(Math.random() * 1);
+            let cum = 0;
+            for (let s in probs) {
+                cum += probs[s];
+                if (rand < cum) { stars = parseInt(s); break; }
+            }
 
-            return {
+            const params = GAME_BALANCE_DATA.MISSION_DATA.DIFFICULTY_PARAMS[stars];
+            const dist = Math.floor(Math.random() * (params.dist[1] - params.dist[0])) + params.dist[0];
+
+            // Weight (Random 1-5 for now, could be scaled?)
+            const weight = Math.floor(Math.random() * 5) + 1;
+
+            // Reward Calculation
+            const baseReward = dist * 0.5; // Base rate
+            const reward = Math.floor(baseReward * params.rewardMod);
+            const penalty = Math.floor(reward * 0.5);
+
+            // Target Time (Avg speed ~12m/s)
+            const targetTime = Math.floor(dist / 12) + 20;
+
+            missions.push({
                 id: `mission-${Date.now()}-${i}`,
-                title: `${type.name} #${Math.floor(Math.random() * 999)}`,
-                distance: distance,
-                weather: weatherKey,
+                title: `輸送依頼 Lv.${stars}`,
+                stars: stars,
+                distance: dist,
                 weight: weight,
                 reward: reward,
                 penalty: penalty,
-                difficulty: type.id,
                 targetTime: targetTime,
-                stars: stars
-            };
-        });
+                weatherTable: params.weatherTable, // Setup for dynamic weather
+                enemyTier: params.enemyTier
+            });
+        }
+        return missions;
+    },
+
+    rerollMissions: (playerData) => {
+        const COST = 100;
+        if (playerData.money < COST) return null;
+        playerData.money -= COST;
+        return MissionManager.generateMissions(playerData);
     }
 };

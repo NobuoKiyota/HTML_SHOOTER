@@ -13,23 +13,55 @@ const SaveManager = {
         if (savedData) {
             try {
                 const data = JSON.parse(savedData);
-                // 既存のレベルに最新のキーをマージして undefined を防ぐ
-                const defaultLevels = { speed: 0, health: 0, engine_power: 0, accel: 0 };
-                // 移行処理: cargo_cap -> engine_power
-                if (data.upgradeLevels && data.upgradeLevels.cargo_cap !== undefined) {
-                    data.upgradeLevels.engine_power = data.upgradeLevels.cargo_cap;
-                    delete data.upgradeLevels.cargo_cap;
+                // V2 Migration: Ensure new keys exist
+                const defaultLevels = { HP: 0, ENGINE: 0, ACCEL: 0, SPEED: 0, BRAKE: 0, WEAPON_OS: 0 };
+
+                // Map old keys if they exist
+                if (data.upgradeLevels) {
+                    if (data.upgradeLevels.health !== undefined) defaultLevels.HP = data.upgradeLevels.health;
+                    if (data.upgradeLevels.speed !== undefined) defaultLevels.SPEED = data.upgradeLevels.speed;
+                    if (data.upgradeLevels.accel !== undefined) defaultLevels.ACCEL = data.upgradeLevels.accel;
+                    if (data.upgradeLevels.engine_power !== undefined) defaultLevels.ENGINE = data.upgradeLevels.engine_power;
+                    // cargo_cap -> engine_power was old migration
                 }
+
                 const mergedLevels = Object.assign(defaultLevels, data.upgradeLevels || {});
-                delete mergedLevels.weapon; // 武器強化は廃止
+
+                // Remove old keys if we want to clean up
+                delete mergedLevels.health;
+                delete mergedLevels.speed;
+                delete mergedLevels.engine_power;
+                delete mergedLevels.cargo_cap;
+                delete mergedLevels.weapon;
 
                 // キャリア統計のデフォルトとマージ
                 const defaultStats = { cleared: 0, started: 0, totalDebrisDestroyed: 0 };
                 const mergedStats = Object.assign(defaultStats, data.careerStats || {});
 
                 // グリッドデータのマージ
-                const mergedGridData = Object.assign(SaveManager.getInitialGridData(), data.gridData || {});
+                let mergedGridData = Object.assign(SaveManager.getInitialGridData(), data.gridData || {});
                 if (!mergedGridData.warehouse) mergedGridData.warehouse = [];
+
+                // VALIDATION: Check if grid data matches current SHIP_LAYOUT
+                const layout = GAME_SETTINGS.SHIP_LAYOUT;
+                const isInvalid = mergedGridData.unlockedCells.some(cell => {
+                    // Check bounds
+                    if (cell.r >= layout.length || cell.c >= layout[0].length) return true;
+                    // Check if cell is Void (0) in new layout
+                    return layout[cell.r][cell.c] === 0;
+                });
+
+                if (isInvalid) {
+                    console.warn("Grid data incompatible with new layout. Resetting grid.");
+                    // Keep warehouse items if possible? For now, just reset grid to be safe.
+                    // Ideally verify warehouse items are valid. All items in warehouse are just parts, so valid.
+                    // Items equipped need to be moved to warehouse or lost.
+                    // Let's just reset to initial for simplicity and safety against bugs.
+                    const initialGrid = SaveManager.getInitialGridData();
+                    // Optional: Try to salvage warehouse
+                    initialGrid.warehouse = mergedGridData.warehouse || [];
+                    mergedGridData = initialGrid;
+                }
 
                 return {
                     money: data.money !== undefined ? data.money : 100,
@@ -49,8 +81,8 @@ const SaveManager = {
 
     getInitialData: () => {
         return {
-            money: GAME_SETTINGS.ECONOMY.INITIAL_MONEY || 100,
-            upgradeLevels: { speed: 0, health: 0, cargo_cap: 0, weapon: 0, accel: 0 },
+            money: GAME_SETTINGS.ECONOMY.INITIAL_MONEY || 1000,
+            upgradeLevels: { HP: 0, ENGINE: 0, ACCEL: 0, SPEED: 0, BRAKE: 0, WEAPON_OS: 0 },
             partsCount: 0,
             inventory: {},
             careerStats: { cleared: 0, started: 0, totalDebrisDestroyed: 0 },
@@ -60,16 +92,22 @@ const SaveManager = {
 
     getInitialGridData: () => {
         const unlocked = [];
-        // 初期 2x3 (row 0..1, col 0..2)
-        for (let r = 0; r < 2; r++) {
-            for (let c = 0; c < 3; c++) {
-                unlocked.push({ r, c });
+        const layout = GAME_SETTINGS.SHIP_LAYOUT;
+        // Scan layout for Initial (2) cells
+        for (let r = 0; r < layout.length; r++) {
+            for (let c = 0; c < layout[r].length; c++) {
+                if (layout[r][c] === 2) {
+                    unlocked.push({ r, c });
+                }
             }
         }
+
         return {
             unlockedCells: unlocked,
             equippedParts: [
-                { id: `part-${Date.now()}`, type: 'PrimaryWeapon', r: 0, c: 0, level: 1 }
+                // Init: 1 BeamGuns at E5
+                { id: `part-init-1`, type: 'BeamGun', r: 4, c: 4, level: 1 }
+                //{ id: `part-init-2`, type: 'BeamGun', r: 4, c: 5, level: 1 }
             ],
             warehouse: [],
             gridExpansionCostTotal: 0
